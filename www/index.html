@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f1c">
+<title>C919 TAKEOFF PERF</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0f1c;--panel:#10182b;--panel2:#0d1526;--input:#0a1120;--border:#1e2d4a;--border2:#16233c;
+  --text:#e6eefc;--text2:#93a7c6;--text3:#5b6f8f;
+  --accent:#4da3ff;--accent-bg:rgba(77,163,255,.12);--accent-border:rgba(77,163,255,.3);
+  --green:#34d399;--green-bg:rgba(52,211,153,.12);--green-border:rgba(52,211,153,.25);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,.12);--amber-border:rgba(251,191,36,.25);
+  --red:#f87171;--red-bg:rgba(248,113,113,.12);--red-border:rgba(248,113,113,.25);
+  --speed-v1:#fbbf24;--speed-vr:#34d399;--speed-v2:#4da3ff;
+  --mask:rgba(4,8,16,.74);
+  --ls-bg:#f4f1e8;--ls-ink:#1c1c1c;--ls-rule:rgba(0,0,0,.16);--ls-shadow:0 6px 18px rgba(0,0,0,.45);
+  --r:12px;
+}
+/* 白天模式：米黄纸感，不刺眼 */
+html.light{
+  --bg:#e9e4da;--panel:#f3eee4;--panel2:#ece7dc;--input:#faf6ee;--border:#cbc3b4;--border2:#d8d1c3;
+  --text:#26221b;--text2:#5f584c;--text3:#8b8272;
+  --accent:#1d4ed8;--accent-bg:rgba(29,78,216,.08);--accent-border:rgba(29,78,216,.22);
+  --green:#0f7a5a;--green-bg:rgba(15,122,90,.10);--green-border:rgba(15,122,90,.24);
+  --amber:#8a5a00;--amber-bg:rgba(138,90,0,.10);--amber-border:rgba(138,90,0,.22);
+  --red:#b3261e;--red-bg:rgba(179,38,30,.09);--red-border:rgba(179,38,30,.22);
+  --speed-v1:#a35a00;--speed-vr:#0b6b4f;--speed-v2:#1d4ed8;
+  --mask:rgba(46,41,32,.42);
+  --ls-bg:#fbf7ee;--ls-ink:#2a241b;--ls-rule:rgba(0,0,0,.14);--ls-shadow:0 4px 14px rgba(90,80,60,.16);
+}
+html{font-size:16px}
+body{
+  font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;
+  -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+input[type=number],select{
+  background:var(--input);border:1px solid var(--border2);color:var(--text);
+  border-radius:8px;padding:0 12px;width:100%;font-size:1.05rem;height:46px;
+  transition:border-color .15s;outline:none;font-variant-numeric:tabular-nums;
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+select{cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%2393a7c6' d='M3 5l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+
+.app{max-width:1100px;margin:0 auto;padding:10px 12px}
+
+.statusbar{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:var(--panel);
+  border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;
+}
+.statusbar .logo{
+  width:46px;height:46px;border-radius:12px;flex-shrink:0;
+  background:#ffffff;color:#e60012;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bahnschrift','Segoe UI',Arial,sans-serif;
+  font-weight:700;font-size:.78rem;letter-spacing:-.4px;
+  box-shadow:0 4px 12px rgba(0,0,0,.38);
+}
+.statusbar .app-name{
+  font-family:'Bahnschrift','Segoe UI Variable Display','Segoe UI',sans-serif;
+  font-size:1.12rem;font-weight:600;letter-spacing:.6px;
+}
+.statusbar .app-sub{font-size:.72rem;color:var(--text2);letter-spacing:.3px}
+.statusbar .clock{margin-left:auto;text-align:right;flex-shrink:0}
+.statusbar .clock .utc{
+  font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);
+  letter-spacing:1px;
+}
+.statusbar .clock .date{font-size:.7rem;color:var(--text3);font-variant-numeric:tabular-nums}
+
+main{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:10px;align-items:start}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.panel-header{
+  padding:11px 16px;font-size:.72rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:1.6px;color:var(--text2);border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,.02);display:flex;align-items:center;gap:8px;
+}
+.panel-header::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px}
+.panel-body{padding:12px}
+
+.group{margin-bottom:12px;background:var(--panel2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px}
+.group:last-child{margin-bottom:0}
+.group-title{
+  font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--accent);margin-bottom:9px;display:flex;align-items:center;gap:7px;
+}
+.group-title .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.field{margin-bottom:9px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:.78rem;color:var(--text2);margin-bottom:4px;font-weight:600;letter-spacing:.2px}
+.field label .unit{color:var(--text3);font-weight:500;margin-left:5px;font-size:.72rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.btn-row{display:grid;grid-template-columns:1fr 1.35fr;gap:8px;margin-top:12px}
+.btn-calc{
+  width:100%;height:56px;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,#2563eb,#4da3ff);
+  color:#fff;font-size:1rem;font-weight:800;letter-spacing:1px;
+  transition:transform .1s,filter .2s;
+  box-shadow:0 4px 14px rgba(37,99,235,.35);
+}
+.btn-calc:active{transform:scale(.98)}
+.btn-calc:hover{filter:brightness(1.08)}
+.btn-sync{
+  width:100%;height:56px;border:1px solid var(--accent-border);border-radius:10px;cursor:pointer;
+  background:var(--accent-bg);color:var(--accent);font-size:.95rem;font-weight:800;letter-spacing:1px;
+  transition:transform .1s,filter .2s;
+}
+.btn-sync:active{transform:scale(.98)}
+.btn-sync:hover{filter:brightness(1.15)}
+.btn-sync:disabled{opacity:.5;cursor:not-allowed}
+.sync-status{margin-top:8px;font-size:.75rem;text-align:center;min-height:1.3em;font-weight:600;color:var(--text3)}
+.sync-status.ok{color:var(--green)}
+.sync-status.err{color:var(--red)}
+
+.placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:70px 20px;color:var(--text3);text-align:center;
+}
+.placeholder .ic{width:52px;height:52px;margin-bottom:14px;opacity:.25}
+.placeholder p{font-size:.88rem}
+
+.conf-row{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  border-bottom:1px solid var(--border);
+}
+.conf-row .lab{font-size:.72rem;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.conf-row .val{
+  font-size:1.5rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;
+  letter-spacing:.5px;
+}
+.conf-row .flap{font-size:.8rem;color:var(--text2);font-weight:600}
+.badge{
+  margin-left:auto;padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:800;
+  letter-spacing:.5px;white-space:nowrap;
+}
+.badge.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.badge.warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.badge.fail{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+.flex-strip{display:flex;border-bottom:1px solid var(--border)}
+.flex-strip .cell{flex:1;padding:10px 12px;text-align:center}
+.flex-strip .cell + .cell{border-left:1px solid var(--border2)}
+.flex-strip .lbl{font-size:.68rem;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.flex-strip .val{font-size:1.35rem;font-weight:800;font-variant-numeric:tabular-nums}
+.flex-strip .val.amber{color:var(--amber)}
+.flex-strip .val.green{color:var(--green)}
+.flex-strip .val.dim{color:var(--text3)}
+
+.speeds{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)}
+.speed-box{padding:18px 10px;text-align:center;position:relative}
+.speed-box:not(:last-child){border-right:1px solid var(--border2)}
+.speed-name{font-size:.85rem;font-weight:800;color:var(--text2);letter-spacing:2px;margin-bottom:4px}
+.speed-name sub{font-size:.6rem}
+.speed-value{
+  font-size:2.9rem;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--text);
+}
+.speed-unit{font-size:.72rem;color:var(--text3);font-weight:700;margin-top:3px;letter-spacing:1px}
+.speed-box.v1 .speed-value{color:var(--speed-v1)}
+.speed-box.vr .speed-value{color:var(--speed-vr)}
+.speed-box.v2 .speed-value{color:var(--speed-v2)}
+
+.details{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)}
+.rwy-viz{padding:12px 14px;border-bottom:1px solid var(--border)}
+.rwy-viz .rv-title{font-size:.68rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:4px}
+.detail{padding:9px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--border2)}
+.detail:nth-child(odd){border-right:1px solid var(--border2)}
+.detail .k{font-size:.74rem;color:var(--text3);white-space:nowrap}
+.detail .v{font-size:.85rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);text-align:right}
+
+.warns{padding:10px 14px;border-bottom:1px solid var(--border)}
+.warn{
+  display:flex;align-items:flex-start;gap:8px;padding:7px 11px;border-radius:8px;
+  margin-bottom:5px;font-size:.8rem;font-weight:600;line-height:1.4;
+}
+.warn:last-child{margin-bottom:0}
+.warn .ic{flex-shrink:0;margin-top:1px}
+.warn.ok{background:var(--green-bg);color:var(--green)}
+.warn.warn{background:var(--amber-bg);color:var(--amber)}
+.warn.err{background:var(--red-bg);color:var(--red)}
+.warn.info{background:var(--accent-bg);color:var(--accent)}
+
+.conf-table-wrap{padding:12px 14px}
+.conf-table-wrap .t{font-size:.68rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.conf-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.conf-table th{
+  text-align:left;padding:5px 7px;color:var(--text3);font-weight:700;
+  border-bottom:1px solid var(--border2);font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;
+}
+.conf-table td{padding:6px 7px;color:var(--text2);font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border2)}
+.conf-table tr.active td{color:var(--accent);font-weight:800}
+.conf-table tr.bad td{color:var(--text3);text-decoration:line-through;opacity:.55}
+
+footer{margin-top:10px}
+footer details{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
+}
+footer summary{
+  padding:11px 16px;font-size:.72rem;font-weight:800;color:var(--text3);cursor:pointer;
+  text-transform:uppercase;letter-spacing:1.2px;list-style:none;
+}
+footer summary::-webkit-details-marker{display:none}
+footer .ref{padding:4px 16px 14px;font-size:.73rem;color:var(--text3);line-height:1.75}
+footer .ref h4{color:var(--text2);font-size:.75rem;margin:9px 0 3px}
+
+.rwy-note{margin-top:6px;font-size:.68rem;line-height:1.6;color:var(--text3);letter-spacing:.1px}
+.rwy-note .k{font-weight:800}
+.rwy-note .k.v1{color:#fbbf24}
+.rwy-note .k.vr{color:#34d399}
+.rwy-note .k.lof{color:#8ff0c8}
+.rwy-note .k.b35{color:#4da3ff}
+
+/* ---- 舱单 LOAD SHEET ---- */
+.ls-wrap{padding:12px 14px;background:rgba(0,0,0,.16);border-bottom:1px solid var(--border)}
+.ls{
+  position:relative;background:var(--ls-bg);color:var(--ls-ink);border-radius:3px;
+  border:1px solid var(--ls-rule);
+  padding:12px 14px 10px;font-family:ui-monospace,Consolas,"Courier New",monospace;
+  font-size:.72rem;line-height:1.45;box-shadow:var(--ls-shadow);
+  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.022) 0 1px,transparent 1px 3px);
+}
+.ls-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-right:54px;
+  border-bottom:2px solid #1c1c1c;padding-bottom:5px;margin-bottom:7px}
+.ls-title{font-weight:800;letter-spacing:1.1px;font-size:.8rem}
+.ls-no{font-size:.64rem;opacity:.7;white-space:nowrap}
+.ls-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
+.ls-row .ls-flight{font-weight:800;font-size:.95rem;letter-spacing:.5px}
+.ls-row .ls-route{font-weight:700}
+.ls-grid{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:2px 10px;margin:6px 0;padding:5px 0;
+  border-top:1px dashed rgba(0,0,0,.35);border-bottom:1px dashed rgba(0,0,0,.35)}
+.ls-grid .k{opacity:.6;letter-spacing:.3px}
+.ls-grid .v{font-weight:700;white-space:nowrap}
+.ls-v{display:flex;gap:16px;align-items:baseline;margin-top:6px}
+.ls-v span{font-weight:700}
+.ls-v b{font-size:1.05rem}
+.ls-v .u{font-weight:400;opacity:.55;font-size:.64rem;margin-left:3px}
+.ls-foot{margin-top:8px;padding-top:5px;border-top:1px solid rgba(0,0,0,.25);
+  display:flex;justify-content:space-between;gap:10px;font-size:.62rem;opacity:.7;letter-spacing:.6px}
+.ls-stamp{position:absolute;right:16px;bottom:22px;transform:rotate(-12deg);border:2px solid rgba(186,38,38,.5);
+  color:rgba(186,38,38,.55);font-weight:800;letter-spacing:2px;padding:1px 8px;border-radius:3px;font-size:.7rem}
+.ls-copy{position:absolute;right:10px;top:7px;z-index:2;background:rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.22);
+  color:#1c1c1c;border-radius:4px;font-size:.6rem;padding:2px 7px;cursor:pointer;font-family:inherit;letter-spacing:.4px}
+.ls-copy:hover{background:rgba(0,0,0,.12)}
+
+.theme-toggle{
+  display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;margin-right:4px;
+  border-radius:999px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);
+  font-size:.72rem;font-weight:800;letter-spacing:.3px;cursor:pointer;flex-shrink:0;
+}
+.theme-toggle:hover{color:var(--text);border-color:var(--accent-border)}
+.theme-toggle .ic{font-size:.85rem;line-height:1}
+
+/* ---- 版本标识 ---- */.ver-chip{
+  display:inline-block;margin-left:7px;padding:1px 8px;border-radius:9px;vertical-align:1px;
+  font-size:.66rem;font-weight:800;letter-spacing:.4px;color:var(--accent);
+  background:var(--accent-bg);border:1px solid var(--accent-border);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---- 启动弹窗 / 免费声明 ---- */
+.notice-mask{
+  position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;
+  padding:16px;background:var(--mask);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+}
+.notice-mask.show{display:flex;animation:noticeFade .18s ease}
+@keyframes noticeFade{from{opacity:0}to{opacity:1}}
+.notice{
+  width:100%;max-width:470px;max-height:86vh;
+  display:flex;flex-direction:column;
+  background:var(--panel);
+  border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55);
+  -webkit-user-select:text;user-select:text;
+  animation:noticeRise .22s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes noticeRise{from{transform:translateY(10px) scale(.985);opacity:0}to{transform:none;opacity:1}}
+.notice-head{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--border);flex:0 0 auto}
+.notice-head h2{font-size:.95rem;font-weight:800;letter-spacing:.4px}
+.notice-free{
+  font-size:.58rem;font-weight:800;letter-spacing:1.1px;padding:2px 7px;border-radius:5px;
+  background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);
+}
+.notice-ver{margin-left:auto;font-size:.68rem;font-weight:700;color:var(--text3);font-variant-numeric:tabular-nums}
+.notice-body{padding:12px 16px 2px;font-size:.79rem;line-height:1.78;color:var(--text2);flex:1 1 auto;overflow-y:auto;min-height:0;overscroll-behavior:contain}
+.notice-body p{margin-bottom:8px}
+.notice-body b{color:var(--text);font-weight:700}
+.notice-body .dim{
+  color:var(--text3);font-size:.71rem;line-height:1.62;
+  border-top:1px dashed var(--border2);padding-top:8px;margin-top:10px;
+}
+.notice-author{
+  margin:8px 16px 0;padding:9px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--panel2);border:1px solid var(--border2);border-radius:10px;flex:0 0 auto;
+}
+.notice-author .k{font-size:.66rem;color:var(--text3);font-weight:800;letter-spacing:.8px}
+.notice-author .bili{
+  font-size:.76rem;font-weight:700;color:var(--accent);text-decoration:none;
+  border-bottom:1px dashed var(--accent-border);word-break:break-all;
+}
+.notice-author .bili:hover{color:#7cbcff}
+.notice-author .copy{
+  margin-left:auto;height:26px;padding:0 10px;border-radius:7px;cursor:pointer;
+  background:var(--accent-bg);border:1px solid var(--accent-border);
+  color:var(--accent);font-size:.68rem;font-weight:800;letter-spacing:.3px;
+}
+.notice-author .copy:active{transform:scale(.97)}
+.notice-foot{display:flex;align-items:center;gap:10px;padding:12px 16px 14px;flex:0 0 auto}
+.notice-foot .meta{font-size:.67rem;color:var(--text3);font-variant-numeric:tabular-nums}
+.notice-ok{
+  margin-left:auto;height:38px;padding:0 20px;border:none;border-radius:9px;cursor:pointer;
+  background:linear-gradient(135deg,#2563eb,#4da3ff);color:#fff;
+  font-size:.82rem;font-weight:800;letter-spacing:.8px;
+  box-shadow:0 4px 14px rgba(37,99,235,.3);
+}
+.notice-ok:active{transform:scale(.98)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="statusbar">
+    <div class="logo">C919</div>
+    <div>
+      <div class="app-name">C919 TAKEOFF PERF</div>
+      <div class="app-sub">Takeoff Performance Calculator &middot; Fycyc C919 MSFS 2024<span class="ver-chip" id="verChip">v0.0.0</span></div>
+    </div>
+    <button class="theme-toggle" id="btnTheme" type="button" title="切换日间 / 夜间">
+      <span class="ic" id="themeIcon">☾</span><span id="themeTxt">夜间</span>
+    </button>
+    <div class="clock">
+      <div class="utc" id="clockUtc">--:--:--</div>
+      <div class="date" id="clockDate">Z</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">输入参数 Inputs</div>
+      <div class="panel-body">
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>SimBrief 飞行计划</div>
+          <div class="grid2">
+            <div class="field">
+              <label>SimBrief 用户名<span class="unit">Pilot ID</span></label>
+              <input type="text" id="sbUser" placeholder="输入用户名" autocomplete="off">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn-sync" id="btnSB" style="height:46px">导入 SimBrief</button>
+            </div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>重量与平衡</div>
+          <div class="grid2">
+            <div class="field">
+              <label>起飞全重<span class="unit">kg</span></label>
+              <input type="number" id="tow" value="62000" min="38000" max="77300" step="100" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label>重心<span class="unit">% MAC</span></label>
+              <input type="number" id="cg" value="25" min="10" max="40" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>大气条件</div>
+          <div class="grid2">
+            <div class="field">
+              <label>修正海压 QNH<span class="unit">hPa</span></label>
+              <input type="number" id="qnh" value="1013" min="920" max="1084" step="0.1" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label>机场标高<span class="unit">ft</span></label>
+              <input type="number" id="elev" value="0" min="-500" max="16000" step="10" inputmode="numeric">
+            </div>
+          </div>
+          <div class="grid2" style="margin-top:9px">
+            <div class="field">
+              <label>外界温度 OAT<span class="unit">&deg;C</span></label>
+              <input type="number" id="oat" value="15" min="-50" max="60" step="1" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label>推力模式</label>
+              <select id="thrustMode">
+                <option value="toga">TOGA 全推力</option>
+                <option value="flex">FLEX 减推力</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>跑道</div>
+          <div class="field">
+            <label>起飞跑道<span class="unit">同步后自动列出</span></label>
+            <select id="rwySel">
+              <option value="">同步数据后选择跑道</option>
+            </select>
+          </div>
+          <div class="grid2" style="margin-top:9px">
+            <div class="field">
+              <label>跑道长度<span class="unit">m</span></label>
+              <input type="number" id="rwyLen" value="3000" min="500" max="6000" step="50" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label>跑道状态</label>
+              <select id="rwyCond">
+                <option value="dry">干 DRY</option>
+                <option value="wet">湿 WET</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="margin-top:9px">
+            <label>襟翼构型<span class="unit">留空 = 自动</span></label>
+            <select id="flapSel">
+              <option value="auto">自动 AUTO（推荐）</option>
+              <option value="CONF 1">CONF 1 · F10°</option>
+              <option value="CONF 2">CONF 2 · F20°</option>
+              <option value="CONF 3">CONF 3 · F30°</option>
+            </select>
+          </div>
+        </div>
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>风</div>
+          <div class="grid2">
+            <div class="field">
+              <label>风速<span class="unit">kt</span></label>
+              <input type="number" id="windSpd" value="0" min="0" max="60" step="1" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label>风向<span class="unit">&deg;</span></label>
+              <input type="number" id="windDir" value="0" min="0" max="360" step="1" inputmode="numeric">
+            </div>
+          </div>
+          <div class="field" style="margin-top:9px">
+            <label>跑道方向<span class="unit">&deg;</span></label>
+            <input type="number" id="rwyHdg" value="360" min="1" max="360" step="1" inputmode="numeric">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-sync" id="btnSync">同步 SYNC</button>
+          <button class="btn-calc" id="btnCalc">计 算 CALCULATE</button>
+        </div>
+        <div class="sync-status" id="syncStatus"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">计算结果 Results</div>
+      <div id="resultContent">
+        <div class="placeholder">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <p>输入参数后点击计算</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <details>
+      <summary>计算模型与参考 References</summary>
+      <div class="ref">
+        <h4>版本与发布</h4>
+        <p><span id="verFooter">v0.0.0</span> &mdash; 免费发布，作者未授权任何渠道销售</p>
+        <h4>计算模型</h4>
+        <p>大气模型: ISA 国际标准大气 (ICAO Doc 7488)</p>
+        <p>失速速度: Vs = &radic;(2W / &rho;SC<sub>Lmax</sub>) &mdash; Raymer, Aircraft Design: A Conceptual Approach</p>
+        <p>起飞距离: 力平衡数值积分法 &mdash; Anderson, Aircraft Performance and Design</p>
+        <p>V速度确定: 满足 CCAR-25 / FAR-25 §25.107 (V2&ge;max(1.13Vs<sub>R</sub>, 1.10V<sub>MC</sub>, 1.2Vs), VR&ge;105%V<sub>MC</sub> 且 V2 在 35ft 前达到; V1 平衡场长法)</p>
+        <p>V1/VR/V2/V<sub>LOF</sub> 均为指示空速 KIAS（当量空速换算 TAS&middot;&radic;&sigma;）；距离仍按 TAS 积分</p>
+        <p>VMCA/VMCG: 基于推力不对称与方向舵力矩平衡估算</p>
+        <h4>C919 参数来源</h4>
+        <p>机翼面积 S=124.6m&sup2;, 翼展 b=35.8m &mdash; COMAC 公开技术文档</p>
+        <p>发动机 CFM LEAP-1C, 海平面推力 130kN/台 &mdash; CFM International 公开数据</p>
+        <p>气动系数基于同类窄体客机公开论文数据估算 (Ref: Roskam, Airplane Design)</p>
+        <h4>免责声明</h4>
+        <p>本工具仅供模拟飞行使用，计算结果为近似值，不可用于真实飞行操作。</p>
+      </div>
+    </details>
+  </footer>
+</div>
+
+<div class="notice-mask" id="noticeMask">
+  <div class="notice" role="dialog" aria-modal="true" aria-labelledby="noticeTitle" aria-describedby="noticeBody">
+    <div class="notice-head">
+      <span class="notice-free">FREE</span>
+      <h2 id="noticeTitle">免费发布声明</h2>
+      <span class="notice-ver" id="verModal">v0.0.0</span>
+    </div>
+    <div class="notice-body" id="noticeBody">
+      <p>本程序由个人爱好者独立开发，<b>以免费方式发布，供模拟飞行娱乐与技术学习使用</b>。作者从未授权任何个人、店铺或平台销售、代售、捆绑销售或以任何名义变相收费。</p>
+      <p>若您是通过<b>任何有偿渠道</b>获得本程序的&mdash;&mdash;包括但不限于付费下载、代购代下、网盘会员、&ldquo;完整版解锁&rdquo;、付费教程或资源包附赠&mdash;&mdash;该交易未经作者授权、与作者无关，<b>您很可能已经上当受骗</b>。建议立即停止付款，留存页面与聊天截图作为凭证，向收款平台申请退款并举报该卖家。</p>
+      <p>本程序<b>没有付费版本、没有内购解锁、没有隐藏收费</b>，后续更新同样免费发布；作者也不会以&ldquo;激活&rdquo;&ldquo;授权&rdquo;&ldquo;技术支持&rdquo;&ldquo;优先更新&rdquo;等任何理由向您另行收费。</p>
+      <p>如需获取最新版本、反馈问题或核实发布渠道，请以作者 B 站主页公布的下载地址为准（见下方）。</p>
+      <p class="dim">本程序与 COMAC（中国商飞）、Microsoft Flight Simulator、Fycyc 均无隶属、授权或代理关系，相关名称与商标归各自权利人所有。程序按&ldquo;现状&rdquo;提供，仅供模拟飞行娱乐，计算结果为近似值，不得用于真实飞行或任何实际运行决策。</p>
+    </div>
+    <div class="notice-author">
+      <span class="k">制作人 &middot; B 站主页</span>
+      <a class="bili" id="biliLink" href="https://space.bilibili.com/1203628872?spm_id_from=333.1007.0.0"
+         target="_blank" rel="noopener noreferrer" title="在浏览器中打开作者 B 站主页">space.bilibili.com/1203628872</a>
+      <button class="copy" id="btnCopyBili" type="button">复制链接</button>
+    </div>
+    <div class="notice-foot">
+      <span class="meta" id="metaModal">v0.0.0</span>
+      <button class="notice-ok" id="btnNoticeOk" type="button">我已知晓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const C919 = {
+  S: 124.6, b: 35.8, MAC: 5.34,
+  MTOW: 77300, OEW: 42000,
+  nEng: 2, thrustSL: 130000, CG_ref: 25,
+  configs: {
+    "CONF 1": { flapDeg: 10, CLmax: 1.90, CD0: 0.030, CL_gnd: 0.10, VMCA_sl: 122, VMCG_sl: 112 },
+    "CONF 2": { flapDeg: 20, CLmax: 2.15, CD0: 0.040, CL_gnd: 0.15, VMCA_sl: 118, VMCG_sl: 108 },
+    "CONF 3": { flapDeg: 30, CLmax: 2.40, CD0: 0.055, CL_gnd: 0.20, VMCA_sl: 115, VMCG_sl: 105 },
+  },
+  mu_roll: 0.03, mu_brake_dry: 0.35, mu_brake_wet: 0.22,
+  reverseEff: 0.40, screenHt: 35 * 0.3048,
+  requiredGrad2: 0.024, requiredGrad1: 0.021,
+  flexMaxDelta: 40,
+};
+const G = 9.80665, RHO0 = 1.225, T0 = 288.15, L = 0.0065, RD = 287.05;
+const KT2MS = 0.514444, MS2KT = 1.94384, FT2M = 0.3048;
+
+// ---- 版本与发布信息：改版本号只需改这一处 ----
+const APP_VERSION = "1.0.0";
+const BUILD_DATE = "2026-10-20";
+const AUTHOR_BILI_URL = "https://space.bilibili.com/1203628872?spm_id_from=333.1007.0.0";
+
+function atmosphere(qnh, elevFt, oatC) {
+  const altM = elevFt * FT2M;
+  const exponent = G / (L * RD);
+  const pStation = (qnh * 100) * Math.pow(1 - L * altM / T0, exponent);
+  const tK = oatC + 273.15;
+  const rho = pStation / (RD * tK);
+  const sigma = rho / RHO0;
+  const densityAltM = (T0 / L) * (1 - Math.pow(sigma, 1 / (exponent - 1)));
+  return { pStation, tK, rho, sigma, densityAltFt: densityAltM / FT2M };
+}
+
+function windComponents(spd, dir, hdg) {
+  const a = (dir - hdg) * Math.PI / 180;
+  return { headwind: spd * Math.cos(a), crosswind: spd * Math.sin(a) };
+}
+function thrustStatic(sigma) { return C919.thrustSL * Math.pow(sigma, 1.2); }
+function estVMCA(base, sigma) { return base * Math.sqrt(Math.pow(sigma, 1.2)); }
+function flexDensityRatio(atm, flexTemp) {
+  const tK = flexTemp + 273.15;
+  return (atm.pStation / (RD * tK)) / RHO0;
+}
+
+function thrustAtV(v, sigma) {
+  return thrustStatic(sigma) * Math.max(0.35, 1 - 0.35 * (v / 340.29));
+}
+
+function integrateAccel(v0, vEnd, nEng, sigma, rho, S, CD, CLg, mu, mass) {
+  let v = v0, d = 0, dt = 0.05;
+  for (let i = 0; i < 200000 && v < vEnd; i++) {
+    const q = 0.5 * rho * v * v;
+    const D = q * S * CD, Lf = q * S * CLg;
+    const N = Math.max(0, mass * G - Lf);
+    const T = nEng * thrustAtV(v, sigma);
+    const a = (T - D - mu * N) / mass;
+    if (a <= 0) return { d: Infinity, v };
+    const dv = a * dt;
+    d += v * dt + 0.5 * a * dt * dt;
+    v += dv;
+  }
+  return { d, v };
+}
+function integrateDecel(v0, rho, S, CD, muB, mass, tRev) {
+  let v = v0, d = 0, dt = 0.05;
+  for (let i = 0; i < 200000 && v > 0.5; i++) {
+    const q = 0.5 * rho * v * v;
+    const D = q * S * CD, Lf = q * S * 0.3;
+    const N = Math.max(0, mass * G - Lf);
+    const dec = (muB * N + D + tRev) / mass;
+    const dv = dec * dt;
+    d += Math.max(0, v * dt - 0.5 * dec * dt * dt);
+    v -= dv;
+    if (v <= 0) break;
+  }
+  if (v > 0.5) d += v * v / (2 * Math.max(0.1, (muB * mass * G + tRev) / mass));
+  return d;
+}
+function airDist(vLof, nEng, sigma, atm, CD, mass) {
+  const trans = vLof * 2.5;
+  const q = 0.5 * atm.rho * vLof * vLof;
+  const D = q * C919.S * CD;
+  const T = nEng * thrustAtV(vLof, sigma);
+  const instGrad = (T - D) / (mass * G);
+  const gamma = Math.min(Math.max(instGrad, 0.02), 0.09);
+  return trans + C919.screenHt / Math.tan(gamma);
+}
+function calcASD(v1, atm, conf, mass, wet, ts) {
+  const t1 = thrustStatic(ts);
+  const muB = wet ? C919.mu_brake_wet : C919.mu_brake_dry;
+  const p1 = integrateAccel(0, v1, C919.nEng, ts, atm.rho, C919.S, conf.CD0, conf.CL_gnd, C919.mu_roll, mass);
+  const p2 = integrateDecel(v1, atm.rho, C919.S, conf.CD0, muB, mass, C919.reverseEff * t1);
+  return p1.d + p2;
+}
+function calcTOD_OEI(v1, vLof, atm, conf, mass, ts) {
+  const CDoei = conf.CD0 + 0.005;
+  const v1c = Math.min(v1, vLof);
+  const p1 = integrateAccel(0, v1c, C919.nEng, ts, atm.rho, C919.S, conf.CD0, conf.CL_gnd, C919.mu_roll, mass);
+  const p2 = integrateAccel(v1c, vLof, 1, ts, atm.rho, C919.S, CDoei, conf.CL_gnd, C919.mu_roll, mass);
+  return p1.d + p2.d + airDist(vLof, 1, ts, atm, CDoei, mass);
+}
+function calcTOD_All(vLof, atm, conf, mass, ts) {
+  const p1 = integrateAccel(0, vLof, C919.nEng, ts, atm.rho, C919.S, conf.CD0, conf.CL_gnd, C919.mu_roll, mass);
+  return p1.d + airDist(vLof, C919.nEng, ts, atm, conf.CD0, mass);
+}
+function calcV1(vLof, atm, conf, mass, wet, runwayLen, vrMS, ts, vmcgMS) {
+  // vmcgMS 为 VMCG 的 TAS(m/s)；未传入时按当量空速换算
+  if (vmcgMS == null) vmcgMS = estVMCA(conf.VMCG_sl, ts) / Math.sqrt(Math.max(0.05, atm.sigma)) * KT2MS;
+  const lo = vmcgMS;
+  const hi = Math.min(vrMS * 0.98, vLof * 0.99);
+
+  // V1max: ASD(V1) = runwayLen 的解（ASD 随 V1 单调递增）
+  let v1max;
+  if (calcASD(hi, atm, conf, mass, wet, ts) <= runwayLen) v1max = hi;
+  else if (calcASD(lo, atm, conf, mass, wet, ts) >= runwayLen) v1max = lo;
+  else {
+    let a = lo, b = hi;
+    for (let i = 0; i < 60; i++) {
+      const m = (a + b) / 2;
+      if (calcASD(m, atm, conf, mass, wet, ts) < runwayLen) a = m; else b = m;
+    }
+    v1max = (a + b) / 2;
+  }
+
+  // V1min: TOD_OEI(V1) = runwayLen 的解（TOD 随 V1 单调递减）
+  let v1min;
+  if (calcTOD_OEI(lo, vLof, atm, conf, mass, ts) <= runwayLen) v1min = lo;
+  else if (calcTOD_OEI(hi, vLof, atm, conf, mass, ts) >= runwayLen) v1min = hi;
+  else {
+    let a = lo, b = hi;
+    for (let i = 0; i < 60; i++) {
+      const m = (a + b) / 2;
+      if (calcTOD_OEI(m, vLof, atm, conf, mass, ts) < runwayLen) b = m; else a = m;
+    }
+    v1min = (a + b) / 2;
+  }
+
+  // 平衡 V1（ASD = TOD，对应最小所需场长）
+  let a = lo, b = hi;
+  for (let i = 0; i < 60; i++) {
+    const m = (a + b) / 2;
+    if (calcASD(m, atm, conf, mass, wet, ts) < calcTOD_OEI(m, vLof, atm, conf, mass, ts)) a = m; else b = m;
+  }
+  const v1bal = (a + b) / 2;
+
+  const feasible = v1min <= v1max;
+  const v1 = feasible ? v1max : v1bal;
+  return { v1, v1bal, feasible };
+}
+
+function calcConf(name, conf, inp, atm, flexTemp, mass) {
+  const ts = flexTemp != null ? flexDensityRatio(atm, flexTemp) : atm.sigma;
+  // FAR/CS 25.107 的 V1/VR/V2 全部是「指示/校准空速」，而距离积分必须用 TAS。
+  // 低亚音速下 KIAS ≈ EAS = TAS·√σ，这里统一换算，避免把 TAS 当 KIAS 显示。
+  const sqrtSig = Math.sqrt(Math.max(0.05, atm.sigma));
+  const toKias = vMS => vMS * sqrtSig * MS2KT;   // TAS m/s -> KIAS kt
+  const toTasMS = vKT => vKT / sqrtSig * KT2MS;  // KIAS kt -> TAS m/s
+
+  // 失速速度（25.103）：1g 失速速度，换算成指示空速
+  const vsTAS = Math.sqrt(2 * mass * G / (atm.rho * C919.S * conf.CLmax));
+  const vsKIAS = toKias(vsTAS);
+  const vmcaKT = estVMCA(conf.VMCA_sl, ts);
+  const vmcgKT = estVMCA(conf.VMCG_sl, ts);
+
+  // V2（25.107(b)(c)）：V2MIN = max(1.13 VsR, 1.10 VMC)；本机型再取 1.2 Vs 的常用值
+  const v2minKT = Math.max(1.13 * vsKIAS, 1.10 * vmcaKT);
+  const v2KT = Math.max(1.20 * vsKIAS, v2minKT);
+
+  // VR（25.107(e)）：≥105% VMC、≥VMCG+2；且 V2 须在 35ft 前达到 → VR 不得高于 V2-5
+  const cgCorr = (C919.CG_ref - inp.cg) * 0.08;
+  const vrKT = Math.min(
+    Math.max(1.05 * vmcaKT, vmcgKT + 2, v2KT - 5) + cgCorr,
+    v2KT
+  );
+
+  // VLOF（25.107(f)）：必须在 VR 之后离地，且不低于 1.15 Vs
+  const vLofKT = Math.max(1.15 * vsKIAS, vrKT + 3);
+
+  const vLofMS = toTasMS(vLofKT);
+  const vrMS = toTasMS(vrKT);
+  const v1res = calcV1(vLofMS, atm, conf, mass, inp.rwyCond === "wet", inp.rwyLen, vrMS, ts, toTasMS(vmcgKT));
+  const v1KT = Math.min(Math.max(toKias(v1res.v1), vmcgKT), vrKT);
+  const v1MS = toTasMS(v1KT);
+  const hwF = Math.max(-0.5, Math.min(0.5, -inp.headwind * 0.01));
+  const todBal = calcTOD_OEI(v1res.v1bal, vLofMS, atm, conf, mass, ts);
+  const asdBal = calcASD(v1res.v1bal, atm, conf, mass, inp.rwyCond === "wet", ts);
+  const windAdj = Math.max(todBal, asdBal) * (1 + hwF);
+
+  const wet = inp.rwyCond === "wet";
+  const muB = wet ? C919.mu_brake_wet : C919.mu_brake_dry;
+  const CDoei = conf.CD0 + 0.005;
+  const accelToV1 = integrateAccel(0, v1MS, C919.nEng, ts, atm.rho, C919.S, conf.CD0, conf.CL_gnd, C919.mu_roll, mass).d;
+  const vrEff = Math.min(vrMS, vLofMS);
+  const v1ToVr = integrateAccel(v1MS, vrEff, 1, ts, atm.rho, C919.S, CDoei, conf.CL_gnd, C919.mu_roll, mass).d;
+  const vrToVlof = integrateAccel(vrEff, vLofMS, 1, ts, atm.rho, C919.S, CDoei, conf.CL_gnd, C919.mu_roll, mass).d;
+  const airSeg = airDist(vLofMS, 1, ts, atm, CDoei, mass);
+  const stopSeg = integrateDecel(v1MS, atm.rho, C919.S, conf.CD0, muB, mass, C919.reverseEff * thrustStatic(ts));
+  const seg = {
+    accelToV1, v1ToVr, vrToVlof, airSeg, stopSeg,
+    todOei: accelToV1 + v1ToVr + vrToVlof + airSeg,
+    asd: accelToV1 + stopSeg,
+  };
+
+  return {
+    name, flapDeg: conf.flapDeg, vsKT: vsKIAS, v1KT, vrKT, v2KT, vmcaKT, vmcgKT,
+    vLofKT, v2minKT,
+    windAdj, margin: inp.rwyLen - windAdj,
+    feasible: windAdj <= inp.rwyLen, overWeight: mass > C919.MTOW,
+    seg,
+  };
+}
+function calcMaxFlexTemp(inp, atm, conf, mass) {
+  if (!calcConf(conf.name, conf, inp, atm, null, mass).feasible) return null;
+  // 减推力判据：实际 V1 下的距离（含安全余量）≤ 可用跑道
+  const margin = 0.9;
+  const flexOk = flex =>
+  {
+    const r = calcConf(conf.name, conf, inp, atm, flex, mass);
+    return Math.max(r.seg.todOei, r.seg.asd) <= inp.rwyLen * margin;
+  };
+  const hi0 = inp.oat + C919.flexMaxDelta;
+  if (flexOk(hi0)) return hi0;
+  let lo = inp.oat, hi = hi0;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (flexOk(mid)) lo = mid; else hi = mid;
+  }
+  return Math.floor(lo);
+}
+
+function selectBest(rs, manual) {
+  if (manual && manual !== "auto") {
+    return rs.find(r => r.name === manual) || rs[0];
+  }
+  const feas = rs.filter(r => r.feasible);
+  if (!feas.length) return rs.slice().sort((a, b) => b.margin - a.margin)[0];
+  const order = ["CONF 1", "CONF 2", "CONF 3"];
+  feas.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
+  if (feas[0].margin >= 300) return feas[0];
+  return feas.slice().sort((a, b) => b.margin - a.margin)[0];
+}
+
+function calc() {
+  const inp = {    tow: parseFloat(document.getElementById("tow").value) || 0,
+    cg: parseFloat(document.getElementById("cg").value) || 25,
+    qnh: parseFloat(document.getElementById("qnh").value) || 1013,
+    elev: parseFloat(document.getElementById("elev").value) || 0,
+    oat: parseFloat(document.getElementById("oat").value) || 15,
+    rwyLen: parseFloat(document.getElementById("rwyLen").value) || 0,
+    windSpd: parseFloat(document.getElementById("windSpd").value) || 0,
+    windDir: parseFloat(document.getElementById("windDir").value) || 0,
+    rwyHdg: parseFloat(document.getElementById("rwyHdg").value) || 0,
+    rwyCond: document.getElementById("rwyCond").value,
+    flapSel: document.getElementById("flapSel").value,
+    thrustMode: document.getElementById("thrustMode").value,
+  };
+  const atm = atmosphere(inp.qnh, inp.elev, inp.oat);
+  const w = windComponents(inp.windSpd, inp.windDir, inp.rwyHdg);
+  inp.headwind = w.headwind; inp.crosswind = w.crosswind;
+
+  const rsToga = Object.entries(C919.configs).map(([n, c]) => calcConf(n, c, inp, atm, null, inp.tow));
+  const bestToga = selectBest(rsToga, inp.flapSel);
+  const maxFlex = calcMaxFlexTemp(inp, atm, C919.configs[bestToga.name], inp.tow);
+  const useFlex = inp.thrustMode === "flex" && maxFlex != null;
+  const flexTemp = useFlex ? maxFlex : null;
+
+  const rs = Object.entries(C919.configs).map(([n, c]) => calcConf(n, c, inp, atm, flexTemp, inp.tow));
+  const best = selectBest(rs, inp.flapSel);
+  render(inp, atm, w, rs, best, maxFlex, useFlex);
+}
+
+function runwayPalette() {
+  const light = document.documentElement.classList.contains("light");
+  return light
+    ? { A: "#a35a00", G: "#0b6b4f", B: "#1d4ed8", R: "#b3261e", D: "#6b6357",
+        rect: "#fbf7ee", line: "#8b8272", dash: "#cdc5b6", dot: "#fbf7ee" }
+    : { A: "#fbbf24", G: "#34d399", B: "#4da3ff", R: "#f87171", D: "#7d8fad",
+        rect: "#0d1526", line: "#2a3d5f", dash: "#22344f", dot: "#0a0f1c" };
+}
+
+function buildRunwaySVG(best, rwyLen) {
+  const L = Math.max(rwyLen, 1);
+  const left = 40, right = 760, W = right - left;
+  const scale = W / L;
+  const xOf = d => Math.min(left + d * scale, right + 30);
+  const seg = best.seg;
+  const x0 = left;
+  const xV1 = xOf(seg.accelToV1);
+  const xVr = xOf(seg.accelToV1 + seg.v1ToVr);
+  const xLof = xOf(seg.accelToV1 + seg.v1ToVr + seg.vrToVlof);
+  const x35 = xOf(seg.todOei);
+  const xStop = xOf(seg.asd);
+  const P = runwayPalette();
+  const A = P.A, G = P.G, B = P.B, R = P.R, D = P.D;
+
+  const line = (x1, x2, y, c) => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${c}" stroke-width="5" stroke-linecap="round"/>`;
+  const dot = (x, y, c, r) => `<circle cx="${x}" cy="${y}" r="${r || 4.5}" fill="${c}" stroke="${P.dot}" stroke-width="1.5"/>`;
+  const tag = (x, y, t, c, anchor) => `<text x="${x}" y="${y}" font-size="11" font-weight="700" fill="${c}" text-anchor="${anchor || "middle"}">${t}</text>`;
+  const dist = (x, y, t) => `<text x="${x}" y="${y}" font-size="10" fill="${D}" text-anchor="middle">${t}</text>`;
+  // 粗略估算文字宽度，用于标签避让（汉字按 11px，其余按 6.3px）
+  const estW = t => { let w = 0; for (const ch of t) w += /[\u4e00-\u9fff]/.test(ch) ? 11 : 6.3; return w; };
+
+  let s = `<svg viewBox="0 0 820 216" style="width:100%;height:auto;display:block">`;
+
+  s += `<rect x="${left}" y="44" width="${W}" height="38" rx="4" fill="${P.rect}" stroke="${P.line}" stroke-width="1.5"/>`;
+  s += `<line x1="${left}" y1="63" x2="${right}" y2="63" stroke="${P.dash}" stroke-width="1" stroke-dasharray="8 6"/>`;
+  s += `<text x="${left}" y="38" font-size="10" fill="${D}">0 m</text>`;
+  s += `<text x="${right}" y="38" font-size="10" fill="${D}" text-anchor="end">${Math.round(rwyLen)} m</text>`;
+
+  const y1 = 138;
+  s += line(x0, xV1, y1, A);
+  s += line(xV1, xLof, y1, G);
+  s += line(xLof, x35, y1, B);
+  s += dot(xV1, y1, A);
+  s += dot(xVr, y1, G, 5);
+  // 离地点刻度：绿段终点 = 主轮离地
+  s += `<line x1="${xLof}" y1="${y1 - 8}" x2="${xLof}" y2="${y1 + 8}" stroke="#0a0f1c" stroke-width="3.6"/>`;
+  s += `<line x1="${xLof}" y1="${y1 - 7}" x2="${xLof}" y2="${y1 + 7}" stroke="${G}" stroke-width="1.6" opacity=".85"/>`;
+  s += dot(x35, y1, B);
+
+  // 标签：V1 向左、VR 向右展开；两行之内自动避让，速度挤在一起时也不会糊成一团
+  const v1Txt = `V1 ${Math.round(best.v1KT)}`;
+  const vrTxt = `VR ${Math.round(best.vrKT)}`;
+  const h35Txt = "35ft";
+  const placed = [];
+  const hit = b => placed.some(p => !(b.x2 < p.x1 || b.x1 > p.x2 || b.y2 < p.y1 || b.y1 > p.y2));
+  const place = (x, txt, color, prefer) => {
+    const w = estW(txt);
+    const sides = prefer === "left" ? ["left", "right"] : ["right", "left"];
+    for (const y of [y1 - 12, y1 - 27, y1 - 42]) {
+      for (const side of sides) {
+        const ax = side === "right" ? x + 9 : x - 9;
+        const b = side === "right"
+          ? { x1: ax + 1, x2: ax + w + 1, y1: y - 10, y2: y + 4 }
+          : { x1: ax - w - 1, x2: ax - 1, y1: y - 10, y2: y + 4 };
+        // 外扩 3px 当作安全间距，避免两个标签贴在一起
+        const bb = { x1: b.x1 - 3, x2: b.x2 + 3, y1: b.y1 - 1, y2: b.y2 + 1 };
+        if (bb.x1 < 4 || bb.x2 > 816 || hit(bb)) continue;
+        placed.push(bb);
+        return tag(ax, y, txt, color, side === "right" ? "start" : "end");
+      }
+    }
+    // 所有位置都放不下（通常是性能远超跑道、几个点被压到跑道尽头）：宁可不标，也不叠字
+    return "";
+  };
+  s += place(xV1, v1Txt, A, "left");
+  s += place(xVr, vrTxt, G, "right");
+  s += place(x35, h35Txt, B, "right");
+
+  // 分段距离：太短的分段不标数字，避免文字互相压住
+  if (xV1 - x0 > 30) s += dist((x0 + xV1) / 2, y1 + 18, Math.round(seg.accelToV1) + "m");
+  if (xLof - xV1 > 30) s += dist((xV1 + xLof) / 2, y1 + 18, Math.round(seg.v1ToVr + seg.vrToVlof) + "m");
+  if (x35 - xLof > 30) s += dist((xLof + x35) / 2, y1 + 18, Math.round(seg.airSeg) + "m");
+
+  const y2 = 186;
+  s += line(x0, xV1, y2, A);
+  s += line(xV1, xStop, y2, R);
+  s += dot(xV1, y2, A);
+  s += dot(xStop, y2, R); s += tag(xStop, y2 - 12, "停止", R);
+  s += dist((xV1 + xStop) / 2, y2 + 18, Math.round(seg.stopSeg) + "m");
+
+  s += `</svg>`;
+  s += `<div class="rwy-note">`
+    + `<span class="k v1">■</span> 全发加速滑跑 &rarr; `
+    + `<span class="k vr">●</span> ${Math.round(best.v1KT)}→${Math.round(best.vrKT)} kt 到 VR 抬头 &rarr; `
+    + `<span class="k lof">┃</span> ${Math.round(best.vLofKT)} kt 离地 &rarr; `
+    + `<span class="k b35">●</span> 空中至 35 ft（V2 ${Math.round(best.v2KT)} kt）`
+    + `</div>`;
+  return s;
+}
+
+/* ---------------- 舱单 / LOAD SHEET ---------------- */
+let lastSync = null, lastSimbrief = null, lastLoadsheetText = "";
+
+function buildLoadsheet(inp, best, maxFlex, useFlex) {
+  const sb = lastSimbrief || {};
+  const fuel = (lastSync && Number.isFinite(Number(lastSync.fuel))) ? Number(lastSync.fuel) : null;
+  const zfw = fuel != null ? inp.tow - fuel : null;
+
+  let rwyId = sb.rwy || "";
+  const sel = document.getElementById("rwySel");
+  if (sel && sel.selectedIndex > 0) {
+    const t = String(sel.options[sel.selectedIndex].textContent || "").split("·")[0].trim();
+    if (t) rwyId = t;
+  }
+
+  const now = new Date();
+  const p2 = n => String(n).padStart(2, "0");
+  const stamp = now.getUTCFullYear() + p2(now.getUTCMonth() + 1) + p2(now.getUTCDate()) + "-" +
+    p2(now.getUTCHours()) + p2(now.getUTCMinutes()) + "Z";
+  const kg = v => (v == null || !Number.isFinite(v)) ? "——" : Math.round(v).toLocaleString("en-US");
+  const windTxt = inp.windSpd > 0 ? p2(inp.windDir) + "°/" + p2(inp.windSpd) : "CALM";
+  const thrTxt = (useFlex && maxFlex != null) ? "FLEX " + maxFlex + "°C" : "TOGA";
+  const route = (sb.icao || "----") + " → " + (sb.dest || "----");
+  const flight = sb.flight || "——";
+  const reg = sb.reg || "——";
+  const pax = sb.pax ? String(sb.pax) : "——";
+  const cargo = sb.cargo ? kg(sb.cargo) + " kg" : "——";
+
+  const rows = [
+    ["RWY", rwyId ? rwyId + " / " + inp.rwyLen + "m" : inp.rwyLen + " m", "WIND", windTxt],
+    ["OAT", Math.round(inp.oat) + "°C", "QNH", Math.round(inp.qnh) + " hPa"],
+    ["FLAP", best.name + " · F" + best.flapDeg + "°", "THRUST", thrTxt],
+    ["TOW", kg(inp.tow) + " kg", "ZFW", zfw != null ? kg(zfw) + " kg" : "——"],
+    ["FUEL", fuel != null ? kg(fuel) + " kg" : "——", "CG", Number(inp.cg).toFixed(1) + " %MAC"],
+    ["PAX", pax, "CARGO", cargo],
+  ];
+
+  let cells = "";
+  for (const r of rows) {
+    cells += `<span class="k">${r[0]}</span><span class="v">${r[1]}</span>` +
+             `<span class="k">${r[2]}</span><span class="v">${r[3]}</span>`;
+  }
+
+  lastLoadsheetText = [
+    "C919 TAKEOFF LOAD SHEET   DSP-" + stamp,
+    "FLIGHT " + flight + "   " + route + "   REG " + reg,
+    "RWY " + (rwyId || "-") + " / " + inp.rwyLen + "m   WIND " + windTxt + "   OAT " + Math.round(inp.oat) + "C   QNH " + Math.round(inp.qnh) + "hPa",
+    "FLAP " + best.name + " F" + best.flapDeg + "   THRUST " + thrTxt,
+    "TOW " + kg(inp.tow) + "kg   ZFW " + (zfw != null ? kg(zfw) : "-") + "kg   FUEL " + (fuel != null ? kg(fuel) : "-") + "kg   CG " + Number(inp.cg).toFixed(1) + "%MAC",
+    "PAX " + pax + "   CARGO " + cargo,
+    "V1 " + Math.round(best.v1KT) + "   VR " + Math.round(best.vrKT) + "   V2 " + Math.round(best.v2KT) + "   VLOF " + Math.round(best.vLofKT) + " KIAS",
+    "SIMULATION ONLY",
+  ].join("\n");
+
+  return `
+  <div class="ls-wrap">
+    <div class="ls">
+      <button class="ls-copy" id="lsCopy" type="button">复制</button>
+      <div class="ls-head">
+        <span class="ls-title">C919 · TAKEOFF LOAD SHEET</span>
+        <span class="ls-no">DSP-${stamp}</span>
+      </div>
+      <div class="ls-row">
+        <span class="ls-flight">${flight}</span>
+        <span class="ls-route">${route}</span>
+        <span>${reg}</span>
+      </div>
+      <div class="ls-grid">${cells}</div>
+      <div class="ls-v">
+        <span>V1&nbsp;<b>${Math.round(best.v1KT)}</b><i class="u">KIAS</i></span>
+        <span>VR&nbsp;<b>${Math.round(best.vrKT)}</b></span>
+        <span>V2&nbsp;<b>${Math.round(best.v2KT)}</b></span>
+        <span class="u">VLOF ${Math.round(best.vLofKT)}</span>
+      </div>
+      <div class="ls-foot">
+        <span>DISPATCH COPY · SIMULATION ONLY</span>
+        <span>${stamp.slice(0, 4)}-${stamp.slice(4, 6)}-${stamp.slice(6, 8)} ${stamp.slice(9, 11)}:${stamp.slice(11, 13)}Z</span>
+      </div>
+      <div class="ls-stamp">SIM</div>
+    </div>
+  </div>`;
+}
+
+function render(inp, atm, w, rs, best, maxFlex, useFlex) {
+  const feasCount = rs.filter(r => r.feasible).length;
+  const manual = inp.flapSel && inp.flapSel !== "auto";
+  let sc, st;
+  if (inp.tow > C919.MTOW) { sc = "fail"; st = "超重 OVERWEIGHT"; }
+  else if (!feasCount) { sc = "fail"; st = "跑道不足 LIMITED"; }
+  else if (manual && !best.feasible) { sc = "fail"; st = "跑道不足 LIMITED"; }
+  else if (best.margin < 300) { sc = "warn"; st = "余量小 LOW MARGIN"; }
+  else { sc = "ok"; st = "可用 OK"; }
+
+  const hw = w.headwind >= 0 ? `HW ${w.headwind.toFixed(0)}` : `TW ${Math.abs(w.headwind).toFixed(0)}`;
+  const xw = `XW ${Math.abs(w.crosswind).toFixed(0)}`;
+
+  let h = `
+  <div class="conf-row">
+    <div>
+      <div class="lab">${manual ? "所选构型" : "推荐构型"}</div>
+      <span class="val">${best.name}</span>
+      <span class="flap">F${best.flapDeg}&deg;</span>
+      ${useFlex ? `<span class="flap" style="color:var(--amber)">FLEX ${maxFlex}&deg;C</span>` : ""}
+    </div>
+    <div class="badge ${sc}">${st}</div>
+  </div>
+  <div class="flex-strip">
+    <div class="cell"><div class="lbl">推力模式</div><div class="val ${useFlex ? "amber" : "green"}">${useFlex ? "FLEX 减推力" : "TOGA 全推力"}</div></div>
+    <div class="cell"><div class="lbl">最大灵活温度</div><div class="val ${maxFlex != null ? "amber" : "dim"}">${maxFlex != null ? maxFlex + "\u00B0C" : "N/A"}</div></div>
+  </div>
+  <div class="speeds">
+    <div class="speed-box v1"><div class="speed-name">V<sub>1</sub></div><div class="speed-value">${Math.round(best.v1KT)}</div><div class="speed-unit">KIAS</div></div>
+    <div class="speed-box vr"><div class="speed-name">V<sub>R</sub></div><div class="speed-value">${Math.round(best.vrKT)}</div><div class="speed-unit">KIAS</div></div>
+    <div class="speed-box v2"><div class="speed-name">V<sub>2</sub></div><div class="speed-value">${Math.round(best.v2KT)}</div><div class="speed-unit">KIAS</div></div>
+  </div>
+  ${buildLoadsheet(inp, best, maxFlex, useFlex)}
+  <div class="details">
+    <div class="detail"><span class="k">密度高度</span><span class="v">${Math.round(atm.densityAltFt)} ft</span></div>
+    <div class="detail"><span class="k">空气密度</span><span class="v">${atm.rho.toFixed(4)} kg/m&sup3;</span></div>
+    <div class="detail"><span class="k">失速速度 Vs</span><span class="v">${Math.round(best.vsKT)} kt</span></div>
+    <div class="detail"><span class="k">离地速度 VLOF</span><span class="v">${Math.round(best.vLofKT)} kt</span></div>
+    <div class="detail"><span class="k">V<sub>MCA</sub></span><span class="v">${Math.round(best.vmcaKT)} kt</span></div>
+    <div class="detail"><span class="k">V<sub>MC G</sub></span><span class="v">${Math.round(best.vmcgKT)} kt</span></div>
+    <div class="detail"><span class="k">所需距离</span><span class="v">${Math.round(best.windAdj)} m</span></div>
+    <div class="detail"><span class="k">可用距离</span><span class="v">${inp.rwyLen} m</span></div>
+    <div class="detail"><span class="k">风分量</span><span class="v">${hw} / ${xw} kt</span></div>
+    <div class="detail"><span class="k">场压 QFE</span><span class="v">${(atm.pStation / 100).toFixed(1)} hPa</span></div>
+  </div>`;
+
+  h += `<div class="rwy-viz"><div class="rv-title">跑道可视化 · Runway Profile</div>${buildRunwaySVG(best, inp.rwyLen)}</div>`;
+
+  const warns = [];
+  if (inp.tow > C919.MTOW) warns.push(["err", `起飞重量 ${inp.tow} kg 超过 MTOW ${C919.MTOW} kg`]);
+  if (inp.cg < 14 || inp.cg > 36) warns.push(["warn", `重心 ${inp.cg}% MAC 超出正常范围 (14-36% MAC)`]);
+  if (!feasCount) warns.push(["err", "所有构型均无法满足跑道长度限制，请减重或检查输入"]);
+  if (manual && !best.feasible) warns.push(["err", `所选构型 ${best.name} 无法满足跑道长度（需 ${Math.round(best.windAdj)} m）`]);
+  if (Math.abs(w.crosswind) > 25) warns.push(["warn", `侧风 ${Math.abs(w.crosswind).toFixed(0)} kt 较大`]);
+  if (atm.densityAltFt > 8000) warns.push(["warn", `密度高度 ${Math.round(atm.densityAltFt)} ft，性能显著衰减`]);
+  if (best.feasible && best.margin < 300) warns.push(["warn", `跑道余量仅 ${Math.round(best.margin)} m，建议增加裕度`]);
+  if (!warns.length) warns.push(["ok", "所有参数正常，起飞性能满足要求"]);
+
+  h += `<div class="warns">`;
+  for (const [ty, msg] of warns) {
+    const ic = ty === "ok" ? "\u2713" : ty === "err" ? "\u2717" : ty === "warn" ? "\u26A0" : "\u2139";
+    h += `<div class="warn ${ty}"><span class="ic">${ic}</span><span>${msg}</span></div>`;
+  }
+  h += `</div>`;
+
+  h += `<div class="conf-table-wrap"><div class="t">全部构型对比</div>
+  <table class="conf-table"><thead><tr><th>构型</th><th>V1</th><th>VR</th><th>V2</th><th>Vs</th><th>需距 m</th><th>状态</th></tr></thead><tbody>`;
+  for (const r of rs) {
+    const cls = r.name === best.name ? "active" : (r.feasible ? "" : "bad");
+    const stt = r.feasible ? (r.margin > 300 ? "OK" : "LOW") : "NG";
+    h += `<tr class="${cls}"><td>${r.name}</td><td>${Math.round(r.v1KT)}</td><td>${Math.round(r.vrKT)}</td><td>${Math.round(r.v2KT)}</td><td>${Math.round(r.vsKT)}</td><td>${Math.round(r.windAdj)}</td><td>${stt}</td></tr>`;
+  }
+  h += `</tbody></table></div>`;
+
+  document.getElementById("resultContent").innerHTML = h;
+
+  const lsBtn = document.getElementById("lsCopy");
+  if (lsBtn) lsBtn.addEventListener("click", async () => {
+    const old = lsBtn.textContent;
+    try {
+      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(lastLoadsheetText);
+      else {
+        const ta = document.createElement("textarea");
+        ta.value = lastLoadsheetText; ta.style.position = "fixed"; ta.style.top = "-1000px";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+      }
+      lsBtn.textContent = "已复制";
+    } catch (e) {
+      lsBtn.textContent = "复制失败";
+    }
+    setTimeout(() => { lsBtn.textContent = old; }, 1600);
+  });
+}
+
+async function syncData() {
+  const status = document.getElementById("syncStatus");
+  const btn = document.getElementById("btnSync");
+  status.className = "sync-status";
+  status.textContent = "连接中...";
+  btn.disabled = true;
+  try {
+    const resp = await fetch("/data", { cache: "no-store" });
+    const d = await resp.json();
+    if (d.ok) {
+      document.getElementById("tow").value = d.tow;
+      document.getElementById("cg").value = d.cg;
+      document.getElementById("qnh").value = d.qnh;
+      document.getElementById("elev").value = d.elev;
+      document.getElementById("oat").value = d.oat;
+      document.getElementById("windSpd").value = d.windSpd;
+      document.getElementById("windDir").value = d.windDir;
+      lastSync = d;
+      status.className = "sync-status ok";
+      status.textContent = "已同步，请选择起飞跑道";
+      calc();
+      loadRunways();
+    } else {
+      status.className = "sync-status err";
+      status.textContent = d.msg || "同步失败";
+    }
+  } catch (e) {
+    status.className = "sync-status err";
+    status.textContent = "无法连接桥接服务（请先运行 C919Bridge）";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadRunways() {
+  const sel = document.getElementById("rwySel");
+  try {
+    const resp = await fetch("/airport", { cache: "no-store" });
+    const ap = await resp.json();
+    if (ap.ok) {
+      sel.innerHTML = "";
+      const ph = document.createElement("option");
+      ph.value = "";
+      ph.textContent = "选择跑道 · " + ap.icao + (ap.name ? " " + ap.name : "");
+      sel.appendChild(ph);
+      for (const rw of ap.runways) {
+        const opt = document.createElement("option");
+        opt.value = JSON.stringify({ len: rw.len, hdg: rw.hdg });
+        opt.textContent = rw.ident + " · " + rw.len + " m · " + rw.hdg + "\u00B0";
+        sel.appendChild(opt);
+      }
+      if (pendingRwy) {
+        for (const opt of sel.options) {
+          const t = opt.textContent.trim();
+          if (t === pendingRwy || t.startsWith(pendingRwy + " ") || t.startsWith(pendingRwy + "\u00B7")) {
+            sel.value = opt.value;
+            sel.dispatchEvent(new Event("change"));
+            break;
+          }
+        }
+        pendingRwy = null;
+      }
+    } else {
+      sel.innerHTML = '<option value="">' + (ap.msg || "无法获取跑道，请导入导航数据") + '</option>';
+    }
+  } catch (e) {
+    sel.innerHTML = '<option value="">无法获取跑道数据</option>';
+  }
+}
+
+let pendingRwy = null;
+
+async function importSimBrief() {
+  const user = document.getElementById("sbUser").value.trim();
+  const status = document.getElementById("syncStatus");
+  if (!user) {
+    status.className = "sync-status err";
+    status.textContent = "请输入 SimBrief 用户名";
+    return;
+  }
+  status.className = "sync-status";
+  status.textContent = "正在获取 SimBrief 飞行计划...";
+  try {
+    const resp = await fetch("/simbrief?userid=" + encodeURIComponent(user), { cache: "no-store" });
+    const d = await resp.json();
+    if (d.ok) {
+      lastSimbrief = d;
+      if (d.tow > 0) document.getElementById("tow").value = d.tow;
+      if (d.elev) document.getElementById("elev").value = d.elev;
+      pendingRwy = d.rwy || null;
+      await loadRunways();
+      status.className = "sync-status ok";
+      status.textContent = "已导入 SimBrief（" + d.icao + " " + d.rwy + "，TOW " + d.tow + " kg）";
+      calc();
+    } else {
+      status.className = "sync-status err";
+      status.textContent = d.msg || "SimBrief 导入失败";
+    }
+  } catch (e) {
+    status.className = "sync-status err";
+    status.textContent = "SimBrief 请求失败（请检查网络或用户名）";
+  }
+}
+
+const THEME_KEY = "c919-theme";
+function applyTheme(mode) {
+  const light = mode === "light";
+  document.documentElement.classList.toggle("light", light);
+  const icon = document.getElementById("themeIcon");
+  const txt = document.getElementById("themeTxt");
+  if (icon) icon.textContent = light ? "☀" : "☾";
+  if (txt) txt.textContent = light ? "日间" : "夜间";
+  // 同步窗口顶栏配色（WinForms 端）
+  try { fetch("/theme?mode=" + (light ? "light" : "dark"), { cache: "no-store" }).catch(() => { }); } catch (e) { }
+}
+function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) { }
+  applyTheme(saved === "light" ? "light" : "dark");
+}
+initTheme();
+
+function tickClock() {
+  const now = new Date();
+  const p = n => String(n).padStart(2, "0");
+  document.getElementById("clockUtc").textContent =
+    p(now.getUTCHours()) + ":" + p(now.getUTCMinutes()) + ":" + p(now.getUTCSeconds());
+  document.getElementById("clockDate").textContent =
+    now.getUTCFullYear() + "-" + p(now.getUTCMonth() + 1) + "-" + p(now.getUTCDate()) + " UTC";
+}
+
+document.getElementById("btnTheme").addEventListener("click", () => {
+  const light = !document.documentElement.classList.contains("light");
+  applyTheme(light ? "light" : "dark");
+  try { localStorage.setItem(THEME_KEY, light ? "light" : "dark"); } catch (e) { }
+  calc();
+});
+
+document.getElementById("btnCalc").addEventListener("click", calc);
+document.getElementById("btnSync").addEventListener("click", syncData);
+document.getElementById("btnSB").addEventListener("click", importSimBrief);
+document.getElementById("rwySel").addEventListener("change", e => {
+  const v = e.target.value;
+  if (!v) return;
+  try {
+    const d = JSON.parse(v);
+    document.getElementById("rwyLen").value = d.len;
+    document.getElementById("rwyHdg").value = d.hdg;
+    calc();
+  } catch (err) { }
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter") calc(); });
+async function tryAutoData() {
+  try {
+    const r = await fetch("/data", { cache: "no-store" });
+    const d = await r.json();
+    if (d && d.ok) { lastSync = d; calc(); }
+  } catch (e) { }
+}
+setInterval(tickClock, 1000);
+tickClock();
+calc();
+tryAutoData();
+
+/* ===================== 版本标识 ===================== */
+const VER_TEXT = "v" + APP_VERSION;
+(function applyVersion() {
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set("verChip", VER_TEXT);
+  set("verFooter", VER_TEXT + " · " + BUILD_DATE);
+  set("verModal", VER_TEXT);
+  set("metaModal", VER_TEXT + " · " + BUILD_DATE);
+  document.title = "C919 TAKEOFF PERF " + VER_TEXT;
+})();
+
+/* ===================== 启动弹窗：免费发布声明 ===================== */
+const noticeMask = document.getElementById("noticeMask");
+function showNotice() { if (noticeMask) noticeMask.classList.add("show"); }
+function hideNotice() { if (noticeMask) noticeMask.classList.remove("show"); }
+
+(function bindNotice() {
+  const okBtn = document.getElementById("btnNoticeOk");
+  if (okBtn) okBtn.addEventListener("click", hideNotice);
+  if (noticeMask) noticeMask.addEventListener("mousedown", e => { if (e.target === noticeMask) hideNotice(); });
+
+  const copyBtn = document.getElementById("btnCopyBili");
+  if (copyBtn) copyBtn.addEventListener("click", async function () {
+    const btn = copyBtn;
+    const flash = ok => {
+      btn.textContent = ok ? "已复制 ✓" : "请手动复制";
+      setTimeout(() => { btn.textContent = "复制链接"; }, 1800);
+    };
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(AUTHOR_BILI_URL);
+        return flash(true);
+      }
+      throw new Error("clipboard api unavailable");
+    } catch (err) {
+      // WebView2 在非安全上下文/无权限时回退到 execCommand
+      let ok = false;
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = AUTHOR_BILI_URL;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.top = "-1000px";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (e2) { ok = false; }
+      flash(ok);
+    }
+  });
+
+  // ESC 关闭（Enter 仍用于计算，不受影响）
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && noticeMask && noticeMask.classList.contains("show")) hideNotice();
+  });
+
+  showNotice();
+})();
+
+</script>
+</body>
+</html>
