@@ -156,6 +156,23 @@ main{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:10px;align-i
 .flex-strip .val.green{color:var(--green)}
 .flex-strip .val.dim{color:var(--text3)}
 
+.trim-strip{display:flex;border-bottom:1px solid var(--border);background:var(--panel2)}
+.trim-strip .cell{flex:1;padding:11px 14px;display:flex;align-items:center;justify-content:center;gap:10px}
+.trim-strip .cell + .cell{border-left:1px solid var(--border2)}
+.trim-strip .lbl{font-size:.68rem;color:var(--text3);font-weight:700;letter-spacing:.6px}
+.trim-strip .num{font-size:1.55rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
+.trim-strip .unit{font-size:.7rem;color:var(--text3);font-weight:800}
+.trim-strip .basis{font-size:.72rem;color:var(--text2);display:block;white-space:nowrap}
+.trim-gauge{position:relative;width:190px;height:10px;border-radius:5px;background:var(--input);border:1px solid var(--border2);margin:6px 0 4px}
+.trim-gauge .band{position:absolute;top:0;bottom:0;background:rgba(52,211,153,.30);border-left:1px solid rgba(52,211,153,.65);border-right:1px solid rgba(52,211,153,.65)}
+.trim-gauge .needle{position:absolute;top:-5px;width:3px;height:20px;border-radius:2px;background:var(--text)}
+.trim-gauge .needle.high,.trim-gauge .needle.low{background:#fbbf24}
+.trim-gauge .mid{position:absolute;top:0;bottom:0;width:1px;background:var(--border)}
+.trim-zone{font-size:.7rem;font-weight:800}
+.trim-zone.in{color:var(--green)}
+.trim-zone.high,.trim-zone.low{color:var(--amber)}
+.beta-tag{font-size:.58rem;font-weight:800;color:#7a4a00;background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.45);border-radius:4px;padding:1px 4px;letter-spacing:.5px}
+.beta-chip{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;font-size:.58rem;font-weight:800;letter-spacing:.8px;color:#7a4a00;background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.45)}
 .speeds{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)}
 .speed-box{padding:18px 10px;text-align:center;position:relative}
 .speed-box:not(:last-child){border-right:1px solid var(--border2)}
@@ -272,6 +289,27 @@ footer .ref h4{color:var(--text2);font-size:.75rem;margin:9px 0 3px}
   padding:16px;background:var(--mask);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
 }
 .notice-mask.show{display:flex;animation:noticeFade .18s ease}
+.cl-lead{font-size:.86rem;color:var(--text2);margin:2px 0 14px}
+.cl-item{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px}
+.cl-tag{flex:0 0 auto;font-size:.62rem;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:4px;margin-top:2px}
+.cl-new .cl-tag{color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border)}
+.cl-fix .cl-tag{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
+.cl-same .cl-tag{color:var(--text3);background:var(--panel2);border:1px solid var(--border2)}
+.cl-item div{font-size:.82rem;line-height:1.55;color:var(--text)}
+.cl-badge{font-size:.62rem;font-weight:800;letter-spacing:.8px;color:#7a4a00;background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.45);border-radius:5px;padding:3px 8px}
+.cl-link{background:none;border:none;padding:0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline}
+.upd-row{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}
+.upd-from{font-size:.8rem;color:var(--text3)}
+.upd-to{font-size:1.05rem;font-weight:800;color:var(--accent)}
+.upd-notes{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;
+  font-size:.78rem;line-height:1.6;color:var(--text2);max-height:220px;overflow:auto;white-space:pre-wrap}
+.upd-warn{font-size:.78rem;color:var(--amber);margin:10px 0 0}
+.upd-later{background:none;border:none;color:var(--text3);font:inherit;font-size:.75rem;cursor:pointer;text-decoration:underline;margin-right:10px}
+.upd-url{font-size:.72rem;color:var(--text3);word-break:break-all;margin:10px 0 0;user-select:text}
+.upd-copy{background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text2);
+  font:inherit;font-size:.7rem;padding:2px 8px;cursor:pointer;margin-left:8px}
+.upd-copy:hover{color:var(--text);border-color:var(--accent-border)}
+.upd-later[disabled]{opacity:.45;cursor:default;text-decoration:none}
 @keyframes noticeFade{from{opacity:0}to{opacity:1}}
 .notice{
   width:100%;max-width:470px;max-height:86vh;
@@ -330,7 +368,7 @@ footer .ref h4{color:var(--text2);font-size:.75rem;margin:9px 0 3px}
     <div class="logo">C919</div>
     <div>
       <div class="app-name">C919 TAKEOFF PERF</div>
-      <div class="app-sub">Takeoff Performance Calculator &middot; Fycyc C919 MSFS 2024<span class="ver-chip" id="verChip">v0.0.0</span></div>
+      <div class="app-sub">Takeoff Performance Calculator &middot; Fycyc C919 MSFS 2024<span class="ver-chip" id="verChip">v0.0.0</span><span class="beta-chip">BETA</span></div>
     </div>
     <button class="theme-toggle" id="btnTheme" type="button" title="切换日间 / 夜间">
       <span class="ic" id="themeIcon">☾</span><span id="themeTxt">夜间</span>
@@ -472,10 +510,14 @@ footer .ref h4{color:var(--text2);font-size:.75rem;margin:9px 0 3px}
       <div class="ref">
         <h4>版本与发布</h4>
         <p><span id="verFooter">v0.0.0</span> &mdash; 免费发布，作者未授权任何渠道销售</p>
+        <p><button class="cl-link" id="btnChangelog" type="button">更新说明 / What's New</button>
+           &middot; <button class="cl-link" id="btnCheckUpdate" type="button">检查更新</button>
+           &middot; <button class="cl-link" id="btnReleases" type="button">GitHub Releases</button></p>
         <h4>计算模型</h4>
         <p>大气模型: ISA 国际标准大气 (ICAO Doc 7488)</p>
         <p>失速速度: Vs = &radic;(2W / &rho;SC<sub>Lmax</sub>) &mdash; Raymer, Aircraft Design: A Conceptual Approach</p>
         <p>起飞距离: 力平衡数值积分法 &mdash; Anderson, Aircraft Performance and Design</p>
+        <p>起飞配平 (BETA): 基于重心与襟翼的线性经验模型，常量集中在 TRIM_MODEL，需按实机数据校准</p>
         <p>V速度确定: 满足 CCAR-25 / FAR-25 §25.107 (V2&ge;max(1.13Vs<sub>R</sub>, 1.10V<sub>MC</sub>, 1.2Vs), VR&ge;105%V<sub>MC</sub> 且 V2 在 35ft 前达到; V1 平衡场长法)</p>
         <p>V1/VR/V2/V<sub>LOF</sub> 均为指示空速 KIAS（当量空速换算 TAS&middot;&radic;&sigma;）；距离仍按 TAS 积分</p>
         <p>VMCA/VMCG: 基于推力不对称与方向舵力矩平衡估算</p>
@@ -500,6 +542,7 @@ footer .ref h4{color:var(--text2);font-size:.75rem;margin:9px 0 3px}
     <div class="notice-body" id="noticeBody">
       <p>本程序由个人爱好者独立开发，<b>以免费方式发布，供模拟飞行娱乐与技术学习使用</b>。作者从未授权任何个人、店铺或平台销售、代售、捆绑销售或以任何名义变相收费。</p>
       <p>若您是通过<b>任何有偿渠道</b>获得本程序的&mdash;&mdash;包括但不限于付费下载、代购代下、网盘会员、&ldquo;完整版解锁&rdquo;、付费教程或资源包附赠&mdash;&mdash;该交易未经作者授权、与作者无关，<b>您很可能已经上当受骗</b>。建议立即停止付款，留存页面与聊天截图作为凭证，向收款平台申请退款并举报该卖家。</p>
+      <p><b>当前为 <span id="noticeVerText">v1.1.0-beta</span> 测试版</b>：新增「起飞配平」估算功能。该数值由重心与襟翼的线性经验模型给出，<b>尚未按实机校准</b>，请以机模手册或实际试飞结果为准；V1/VR/V2、跑道距离等其他计算与正式版 1.0.0 完全一致。</p>
       <p>本程序<b>没有付费版本、没有内购解锁、没有隐藏收费</b>，后续更新同样免费发布；作者也不会以&ldquo;激活&rdquo;&ldquo;授权&rdquo;&ldquo;技术支持&rdquo;&ldquo;优先更新&rdquo;等任何理由向您另行收费。</p>
       <p>如需获取最新版本、反馈问题或核实发布渠道，请以作者 B 站主页公布的下载地址为准（见下方）。</p>
       <p class="dim">本程序与 COMAC（中国商飞）、Microsoft Flight Simulator、Fycyc 均无隶属、授权或代理关系，相关名称与商标归各自权利人所有。程序按&ldquo;现状&rdquo;提供，仅供模拟飞行娱乐，计算结果为近似值，不得用于真实飞行或任何实际运行决策。</p>
@@ -513,6 +556,52 @@ footer .ref h4{color:var(--text2);font-size:.75rem;margin:9px 0 3px}
     <div class="notice-foot">
       <span class="meta" id="metaModal">v0.0.0</span>
       <button class="notice-ok" id="btnNoticeOk" type="button">我已知晓</button>
+    </div>
+  </div>
+</div>
+
+<div class="notice-mask" id="clMask">
+  <div class="notice" role="dialog" aria-modal="true" aria-labelledby="clTitle">
+    <div class="notice-head">
+      <span class="cl-badge">BETA</span>
+      <h2 id="clTitle">更新说明</h2>
+      <span class="notice-ver" id="clVer">v1.1.0-beta</span>
+    </div>
+    <div class="notice-body" id="clBody">
+      <p class="cl-lead">本次为测试版，只新增「起飞配平」，其余计算与正式版 1.0.0 完全一致。</p>
+      <div class="cl-item cl-new"><span class="cl-tag">新增</span><div><b>自动起飞配平</b>：根据重心（%MAC）与所选襟翼，算出配平单位，显示在 V1/VR/V2 下方，并同步写进配载舱单与复制文本。</div></div>
+      <div class="cl-item cl-new"><span class="cl-tag">新增</span><div><b>配平依据</b>：数值旁直接标出所采用的重心与构型，方便和 CDU 核对。</div></div>
+      <div class="cl-item cl-new"><span class="cl-tag">调整</span><div><b>配平刻度改为机模刻度</b>：改用 UP/DN 值（绿区 -2.5 ~ +2.5，超出后机模由绿变白），默认输入（CG 25 %MAC、F10°）对应 <b>0.4 UP</b>；配平栏新增带中线的绿区标尺。</div></div>
+      <div class="cl-item cl-fix"><span class="cl-tag">提醒</span><div>配平仍为线性经验模型，绿区范围（4.5–6.2 U）为可调参数，请以机模手册或实际试飞结果为准。</div></div>
+      <div class="cl-item cl-same"><span class="cl-tag">不变</span><div>V1 / VR / V2 / VLOF、跑道距离、重心与配载等全部原有计算逻辑与 1.0.0 一致，未做任何改动。</div></div>
+    </div>
+    <div class="notice-foot">
+      <span class="meta">可在页脚「更新说明」再次打开</span>
+      <button class="notice-ok" id="btnClOk" type="button">开始使用</button>
+    </div>
+  </div>
+</div>
+
+<div class="notice-mask" id="updMask">
+  <div class="notice" role="dialog" aria-modal="true" aria-labelledby="updTitle">
+    <div class="notice-head">
+      <span class="notice-free" id="updBadge">更新</span>
+      <h2 id="updTitle">发现新版本</h2>
+      <span class="notice-ver" id="updVer">-</span>
+    </div>
+    <div class="notice-body">
+      <div class="upd-row">
+        <span class="upd-from">当前 <b id="updCur">v-</b></span>
+        <span style="color:var(--text3)">&rarr;</span>
+        <span class="upd-to" id="updNew">v-</span>
+      </div>
+      <div class="upd-notes" id="updNotes"></div>
+      <p class="upd-url" id="updUrl"></p>
+      <p class="upd-warn" id="updWarn"></p>
+    </div>
+    <div class="notice-foot">
+      <span class="meta"><button class="upd-later" id="btnUpdLater" type="button">稍后提醒</button><button class="upd-copy" id="btnUpdCopy" type="button">复制链接</button></span>
+      <button class="notice-ok" id="btnUpdGo" type="button">立即更新</button>
     </div>
   </div>
 </div>
@@ -536,7 +625,7 @@ const G = 9.80665, RHO0 = 1.225, T0 = 288.15, L = 0.0065, RD = 287.05;
 const KT2MS = 0.514444, MS2KT = 1.94384, FT2M = 0.3048;
 
 // ---- 版本与发布信息：改版本号只需改这一处 ----
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.2-beta";
 const BUILD_DATE = "2026-10-20";
 const AUTHOR_BILI_URL = "https://space.bilibili.com/1203628872?spm_id_from=333.1007.0.0";
 
@@ -923,7 +1012,7 @@ function buildLoadsheet(inp, best, maxFlex, useFlex) {
     ["FLAP", best.name + " · F" + best.flapDeg + "°", "THRUST", thrTxt],
     ["TOW", kg(inp.tow) + " kg", "ZFW", zfw != null ? kg(zfw) + " kg" : "——"],
     ["FUEL", fuel != null ? kg(fuel) + " kg" : "——", "CG", Number(inp.cg).toFixed(1) + " %MAC"],
-    ["PAX", pax, "CARGO", cargo],
+    ["TRIM", trimText(calcTakeoffTrim(inp.cg, best.flapDeg)), "PAX / CARGO", pax + " / " + cargo],
   ];
 
   let cells = "";
@@ -936,7 +1025,7 @@ function buildLoadsheet(inp, best, maxFlex, useFlex) {
     "C919 TAKEOFF LOAD SHEET   DSP-" + stamp,
     "FLIGHT " + flight + "   " + route + "   REG " + reg,
     "RWY " + (rwyId || "-") + " / " + inp.rwyLen + "m   WIND " + windTxt + "   OAT " + Math.round(inp.oat) + "C   QNH " + Math.round(inp.qnh) + "hPa",
-    "FLAP " + best.name + " F" + best.flapDeg + "   THRUST " + thrTxt,
+    "FLAP " + best.name + " F" + best.flapDeg + "   THRUST " + thrTxt + "   TRIM " + trimText(calcTakeoffTrim(inp.cg, best.flapDeg)) + " (" + trimZone(calcTakeoffTrim(inp.cg, best.flapDeg)).tag + ")",
     "TOW " + kg(inp.tow) + "kg   ZFW " + (zfw != null ? kg(zfw) : "-") + "kg   FUEL " + (fuel != null ? kg(fuel) : "-") + "kg   CG " + Number(inp.cg).toFixed(1) + "%MAC",
     "PAX " + pax + "   CARGO " + cargo,
     "V1 " + Math.round(best.v1KT) + "   VR " + Math.round(best.vrKT) + "   V2 " + Math.round(best.v2KT) + "   VLOF " + Math.round(best.vLofKT) + " KIAS",
@@ -972,6 +1061,42 @@ function buildLoadsheet(inp, best, maxFlex, useFlex) {
   </div>`;
 }
 
+/* ===== BETA 1.1 新增：起飞配平估算 =====
+   仅新增此模型，V1/VR/V2、距离、重心等原有公式一律未改动。
+   线性经验模型：重心越靠前，需要越多抬头配平；襟翼越大，配平略增。
+   拿到实机数据后，只需修改下面这几个常量即可校准。 */
+/* 配平刻度与机模一致：正值 = UP（抬头），负值 = DN（低头）；
+   绿区 -2.5 ~ +2.5，超出后机模由绿变白。
+   常量集中在 TRIM_MODEL，拿到实测点后改这里即可校准。 */
+const TRIM_MODEL = {
+  cgRef: 25.0,        // 参考重心 %MAC
+  base: 0.4,          // 参考重心对应的配平值（正 = UP）
+  perCgPct: 0.26,     // 每 1% MAC 重心前移增加的抬头配平
+  flapRef: 10,        // 参考襟翼角
+  perFlapDeg: 0.02,   // 每度襟翼的配平修正
+  limit: 2.5          // 绿区上下限（±）
+};
+
+function calcTakeoffTrim(cg, flapDeg) {
+  const m = TRIM_MODEL;
+  let u = m.base + (m.cgRef - cg) * m.perCgPct + (flapDeg - m.flapRef) * m.perFlapDeg;
+  u = Math.max(-m.limit, Math.min(m.limit, u));
+  return Math.round(u * 100) / 100;
+}
+
+function trimText(u) {
+  const a = Math.abs(u);
+  if (a < 0.05) return "0.0";
+  return a.toFixed(1) + (u > 0 ? " UP" : " DN");
+}
+
+function trimZone(u) {
+  const m = TRIM_MODEL;
+  if (u > m.limit) return { tag: "超出绿区（白）", cls: "high" };
+  if (u < -m.limit) return { tag: "超出绿区（白）", cls: "low" };
+  return { tag: "绿区内", cls: "in" };
+}
+
 function render(inp, atm, w, rs, best, maxFlex, useFlex) {
   const feasCount = rs.filter(r => r.feasible).length;
   const manual = inp.flapSel && inp.flapSel !== "auto";
@@ -1004,6 +1129,23 @@ function render(inp, atm, w, rs, best, maxFlex, useFlex) {
     <div class="speed-box vr"><div class="speed-name">V<sub>R</sub></div><div class="speed-value">${Math.round(best.vrKT)}</div><div class="speed-unit">KIAS</div></div>
     <div class="speed-box v2"><div class="speed-name">V<sub>2</sub></div><div class="speed-value">${Math.round(best.v2KT)}</div><div class="speed-unit">KIAS</div></div>
   </div>
+  <div class="trim-strip">
+    <div class="cell">
+      <span class="lbl">起飞配平 TRIM</span>
+      <span class="num">${trimText(calcTakeoffTrim(inp.cg, best.flapDeg))}</span>
+      <span class="beta-tag">BETA</span>
+    </div>
+    <div class="cell">
+      <div style="text-align:left">
+        <div class="trim-gauge">
+          <div class="band" style="left:2%;width:96%"></div>
+          <div class="needle ${trimZone(calcTakeoffTrim(inp.cg, best.flapDeg)).cls}" style="left:calc(${((calcTakeoffTrim(inp.cg, best.flapDeg) + TRIM_MODEL.limit) / (2 * TRIM_MODEL.limit) * 96 + 2).toFixed(2)}% - 1px)"></div>
+          <div class="mid" style="left:50%"></div>
+        </div>
+        <span class="basis">CG ${Number(inp.cg).toFixed(1)} %MAC · F${best.flapDeg}&deg; · <span class="trim-zone ${trimZone(calcTakeoffTrim(inp.cg, best.flapDeg)).cls}">${trimZone(calcTakeoffTrim(inp.cg, best.flapDeg)).tag}</span></span>
+      </div>
+    </div>
+  </div>
   ${buildLoadsheet(inp, best, maxFlex, useFlex)}
   <div class="details">
     <div class="detail"><span class="k">密度高度</span><span class="v">${Math.round(atm.densityAltFt)} ft</span></div>
@@ -1016,6 +1158,8 @@ function render(inp, atm, w, rs, best, maxFlex, useFlex) {
     <div class="detail"><span class="k">可用距离</span><span class="v">${inp.rwyLen} m</span></div>
     <div class="detail"><span class="k">风分量</span><span class="v">${hw} / ${xw} kt</span></div>
     <div class="detail"><span class="k">场压 QFE</span><span class="v">${(atm.pStation / 100).toFixed(1)} hPa</span></div>
+    <div class="detail"><span class="k">起飞配平</span><span class="v">${trimText(calcTakeoffTrim(inp.cg, best.flapDeg))} <span class="beta-tag">BETA</span> <span class="trim-zone ${trimZone(calcTakeoffTrim(inp.cg, best.flapDeg)).cls}">${trimZone(calcTakeoffTrim(inp.cg, best.flapDeg)).tag}</span></span></div>
+    <div class="detail"><span class="k">配平依据</span><span class="v">CG ${Number(inp.cg).toFixed(1)} %MAC</span></div>
   </div>`;
 
   h += `<div class="rwy-viz"><div class="rv-title">跑道可视化 · Runway Profile</div>${buildRunwaySVG(best, inp.rwyLen)}</div>`;
@@ -1233,6 +1377,8 @@ tryAutoData();
 /* ===================== 版本标识 ===================== */
 const VER_TEXT = "v" + APP_VERSION;
 (function applyVersion() {
+  const nv = document.getElementById("noticeVerText");
+  if (nv) nv.textContent = "v" + APP_VERSION;
   const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
   set("verChip", VER_TEXT);
   set("verFooter", VER_TEXT + " · " + BUILD_DATE);
@@ -1244,7 +1390,133 @@ const VER_TEXT = "v" + APP_VERSION;
 /* ===================== 启动弹窗：免费发布声明 ===================== */
 const noticeMask = document.getElementById("noticeMask");
 function showNotice() { if (noticeMask) noticeMask.classList.add("show"); }
-function hideNotice() { if (noticeMask) noticeMask.classList.remove("show"); }
+function hideNotice() { if (noticeMask) noticeMask.classList.remove("show"); setTimeout(maybeShowChangelog, 240); }
+
+/* ===================== 检查更新（GitHub Releases） ===================== */
+const UPD_REPO = "https://github.com/Cupresses/C919-Takeoff-Calculator";
+
+function parseVer(s) {
+  const m = String(s || "").replace(/^v/i, "").match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9a-z.]+))?/i);
+  return m ? { a: +m[1], b: +m[2], c: +m[3], pre: m[4] || "" } : null;
+}
+function cmpVer(x, y) {
+  if (!x || !y) return 0;
+  if (x.a !== y.a) return x.a - y.a;
+  if (x.b !== y.b) return x.b - y.b;
+  if (x.c !== y.c) return x.c - y.c;
+  if (!x.pre && y.pre) return 1;
+  if (x.pre && !y.pre) return -1;
+  return x.pre === y.pre ? 0 : (x.pre > y.pre ? 1 : -1);
+}
+function newest(list) {
+  let best = null;
+  for (const r of list) {
+    const v = parseVer(r.tag_name || r.name || "");
+    if (!v) continue;
+    if (!best || cmpVer(v, best.v) > 0) best = { v: v, raw: r };
+  }
+  return best;
+}
+
+const updMask = document.getElementById("updMask");
+let updTarget = null;
+
+function showUpdate(rel, required) {
+  updTarget = rel;
+  const v = rel.v;
+  document.getElementById("updVer").textContent = "v" + rel.raw.tag_name.replace(/^v/i, "");
+  document.getElementById("updCur").textContent = VER_TEXT;
+  document.getElementById("updNew").textContent = "v" + rel.raw.tag_name.replace(/^v/i, "");
+  const body = String(rel.raw.body || "").trim();
+  document.getElementById("updNotes").textContent = body || "（该版本未填写更新说明）";
+  const warn = document.getElementById("updWarn");
+  const laterBtn = document.getElementById("btnUpdLater");
+  if (required) {
+    warn.textContent = "这是正式版更新，建议立即升级后再使用。";
+    laterBtn.textContent = "稍后（10s）";
+    laterBtn.disabled = true;
+    setTimeout(function () { laterBtn.disabled = false; laterBtn.textContent = "稍后提醒"; }, 10000);
+  } else {
+    warn.textContent = "这是可选的测试版更新，不影响当前使用。";
+    laterBtn.textContent = "稍后提醒";
+    laterBtn.disabled = false;
+  }
+  const urlEl = document.getElementById("updUrl");
+  if (urlEl) urlEl.textContent = "下载页：" + ((rel.raw.html_url) || (UPD_REPO + "/releases"));
+  document.getElementById("updBadge").textContent = required ? "正式版" : "BETA";
+  updMask.classList.add("show");
+}
+function hideUpdate() { if (updMask) updMask.classList.remove("show"); }
+
+(function bindUpdate() {
+  const go = document.getElementById("btnUpdGo");
+  if (go) go.addEventListener("click", function () {
+    const url = (updTarget && updTarget.raw.html_url) || (UPD_REPO + "/releases");
+    try { fetch("/open?url=" + encodeURIComponent(url), { cache: "no-store" }).catch(function () { }); } catch (e) { }
+  });
+  const copy = document.getElementById("btnUpdCopy");
+  if (copy) copy.addEventListener("click", function () {
+    const url = (updTarget && updTarget.raw.html_url) || (UPD_REPO + "/releases");
+    const done = () => { copy.textContent = "已复制 ✓"; setTimeout(function () { copy.textContent = "复制链接"; }, 1600); };
+    try {
+      if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(url).then(done).catch(function () { done(); }); }
+      else { const ta = document.createElement("textarea"); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); done(); }
+    } catch (e) { done(); }
+  });
+
+  const checkBtn = document.getElementById("btnCheckUpdate");
+  if (checkBtn) checkBtn.addEventListener("click", function () { checkUpdate(); });
+  const relBtn = document.getElementById("btnReleases");
+  if (relBtn) relBtn.addEventListener("click", function () {
+    try { fetch("/open?url=" + encodeURIComponent(UPD_REPO + "/releases"), { cache: "no-store" }).catch(function () { }); } catch (e) { }
+  });
+
+  const later = document.getElementById("btnUpdLater");
+  if (later) later.addEventListener("click", function () { if (!later.disabled) hideUpdate(); });
+  if (updMask) updMask.addEventListener("mousedown", function (e) { if (e.target === updMask) hideUpdate(); });
+})();
+
+async function checkUpdate() {
+  let data = null;
+  try {
+    const r = await fetch("/gh/releases", { cache: "no-store" });
+    data = await r.json();
+  } catch (e) { return; }
+  if (!Array.isArray(data) || !data.length) return;   // 拉取失败 → 静默
+
+  const rels = data.filter(x => x && !x.draft);
+  const stable = newest(rels.filter(x => !x.prerelease));
+  const betaRel = newest(rels.filter(x => x.prerelease));
+  const loc = parseVer(APP_VERSION);
+  if (!loc) return;
+
+  if (stable && cmpVer(stable.v, loc) > 0) { showUpdate(stable, true); return; }
+  if (betaRel && cmpVer(betaRel.v, loc) > 0) { showUpdate(betaRel, false); return; }
+}
+
+/* ===================== 更新说明弹窗 ===================== */
+const CL_KEY = "c919-changelog-seen";
+const clMask = document.getElementById("clMask");
+function changelogSeen() { try { return localStorage.getItem(CL_KEY) === APP_VERSION; } catch (e) { return false; } }
+function markChangelogSeen() { try { localStorage.setItem(CL_KEY, APP_VERSION); } catch (e) { } }
+function showChangelog() { if (clMask) clMask.classList.add("show"); }
+function hideChangelog() { if (clMask) clMask.classList.remove("show"); markChangelogSeen(); }
+function maybeShowChangelog() { if (!changelogSeen()) showChangelog(); }
+
+setTimeout(checkUpdate, 1600);
+
+(function bindChangelog() {
+  const ver = document.getElementById("clVer");
+  if (ver) ver.textContent = VER_TEXT;
+  const ok = document.getElementById("btnClOk");
+  if (ok) ok.addEventListener("click", hideChangelog);
+  if (clMask) clMask.addEventListener("mousedown", e => { if (e.target === clMask) hideChangelog(); });
+  const link = document.getElementById("btnChangelog");
+  if (link) link.addEventListener("click", function (e) { e.preventDefault(); showChangelog(); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && clMask && clMask.classList.contains("show")) hideChangelog();
+  });
+})();
 
 (function bindNotice() {
   const okBtn = document.getElementById("btnNoticeOk");
