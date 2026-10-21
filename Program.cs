@@ -461,6 +461,31 @@ public static class Bridge
                 body = Encoding.UTF8.GetBytes("{\"ok\":true}");
                 contentType = "application/json; charset=utf-8";
             }
+            else if (path.StartsWith("/gh/releases", StringComparison.Ordinal))
+            {
+                body = Encoding.UTF8.GetBytes(GitHubProxy.GetReleases());
+                contentType = "application/json; charset=utf-8";
+            }
+            else if (path.StartsWith("/open?", StringComparison.Ordinal))
+            {
+                var url = "";
+                var qi2 = path.IndexOf('?');
+                if (qi2 >= 0)
+                {
+                    foreach (var kv in path.Substring(qi2 + 1).Split('&'))
+                    {
+                        var kvp = kv.Split('=');
+                        if (kvp.Length == 2 && kvp[0] == "url") url = Uri.UnescapeDataString(kvp[1]);
+                    }
+                }
+                var opened = false;
+                if (url.StartsWith("https://github.com/", StringComparison.OrdinalIgnoreCase))
+                {
+                    try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }); opened = true; } catch { }
+                }
+                body = Encoding.UTF8.GetBytes("{\"ok\":" + (opened ? "true" : "false") + "}");
+                contentType = "application/json; charset=utf-8";
+            }
             else if (path == "/data")
             {
                 body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(GetPayload(), JsonOpts));
@@ -777,7 +802,7 @@ public class MainForm : Form
     public MainForm()
     {
         Current = this;
-        Text = "C919 起飞性能计算器 v1.0.0";
+        Text = "C919 起飞性能计算器 v1.1.2 BETA";
         try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
         ClientSize = new Size(1140, 800);
         MinimumSize = new Size(900, 640);
@@ -899,6 +924,31 @@ public class MainForm : Form
             statusLabel.ForeColor = WarnColor;
         }
         timeLabel.Text = Bridge.HasData ? "数据更新 " + Bridge.LastUpdate.ToString("HH:mm:ss") : "";
+    }
+}
+
+public static class GitHubProxy
+{
+    private static readonly HttpClient Http = Create();
+    private static HttpClient Create()
+    {
+        var c = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+        c.DefaultRequestHeaders.UserAgent.ParseAdd("C919-Takeoff-Calculator/1.1");
+        c.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+        return c;
+    }
+
+    public static string GetReleases()
+    {
+        try
+        {
+            return Http.GetStringAsync("https://api.github.com/repos/Cupresses/C919-Takeoff-Calculator/releases?per_page=30")
+                       .GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            return "{\"ok\":false,\"error\":" + JsonSerializer.Serialize(ex.Message) + "}";
+        }
     }
 }
 
