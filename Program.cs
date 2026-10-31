@@ -802,7 +802,7 @@ public class MainForm : Form
     public MainForm()
     {
         Current = this;
-        Text = "C919 起飞性能计算器 v1.1.2 BETA";
+        Text = "C919 起飞性能计算器 v1.1.2";
         try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
         ClientSize = new Size(1140, 800);
         MinimumSize = new Size(900, 640);
